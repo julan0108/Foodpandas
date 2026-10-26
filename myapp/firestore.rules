@@ -1,0 +1,88 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function hasValidProfile() {
+        return request.resource.data.keys().hasOnly([
+                 'email',
+                 'displayName',
+                 'phone',
+                 'deliveryAddress',
+                 'latitude',
+                 'longitude',
+                 'updatedAt'
+               ])
+            && request.resource.data.keys().hasAll([
+                 'email',
+                 'displayName',
+                 'phone',
+                 'deliveryAddress',
+                 'updatedAt'
+               ])
+            && request.resource.data.email == request.auth.token.email
+            && request.resource.data.displayName is string
+            && request.resource.data.displayName.size() >= 2
+            && request.resource.data.displayName.size() <= 100
+            && request.resource.data.phone is string
+            && request.resource.data.phone.size() <= 30
+            && request.resource.data.deliveryAddress is string
+            && request.resource.data.deliveryAddress.size() <= 500
+            && (!('latitude' in request.resource.data) ||
+                (request.resource.data.latitude is number &&
+                 request.resource.data.latitude >= -90 &&
+                 request.resource.data.latitude <= 90))
+            && (!('longitude' in request.resource.data) ||
+                (request.resource.data.longitude is number &&
+                 request.resource.data.longitude >= -180 &&
+                 request.resource.data.longitude <= 180))
+            && request.resource.data.updatedAt is timestamp;
+      }
+
+      allow get: if isOwner();
+      allow list, delete: if false;
+      allow create, update: if isOwner() && hasValidProfile();
+
+      match /notifications/{notificationId} {
+        allow get, list: if isOwner();
+        allow update: if isOwner()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+          && request.resource.data.read is bool;
+        allow create, delete: if false;
+      }
+
+      match /devices/{deviceId} {
+        allow get, list: if isOwner();
+        allow create, update: if isOwner()
+          && request.resource.data.keys().hasOnly(['token', 'platform', 'updatedAt'])
+          && request.resource.data.token == deviceId
+          && request.resource.data.platform in ['android', 'ios', 'web', 'macos', 'windows', 'linux']
+          && request.resource.data.updatedAt is timestamp;
+        allow delete: if isOwner();
+      }
+    }
+
+    match /orders/{orderId} {
+      function isOwner() {
+        return request.auth != null && resource.data.userId == request.auth.uid;
+      }
+      allow get, list: if isOwner();
+      allow create: if false;
+      allow update, delete: if false;
+    }
+
+    match /restaurants/{restaurantId} {
+      allow get, list: if resource.data.verified == true
+        && resource.data.active == true;
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

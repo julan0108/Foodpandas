@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1083814338526",
+    "project_id": "foodpandas-f2e83",
+    "storage_bucket": "foodpandas-f2e83.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083814338526:android:b9105e84dfcba616e9474f",
+        "android_client_info": {
+          "package_name": "com.example.myapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7Bo6P6cseo6RSIz_FxVdCssZoz4Q28ys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
